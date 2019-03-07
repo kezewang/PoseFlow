@@ -45,7 +45,7 @@ def display_pose(imgdir, visdir, tracked, cmap):
                 alpha_ratio = 5.0
 
             if pose.shape[0] == 16:
-                mpii_part_names = ['RAnkle','RKnee','RHip','LHip','LKnee','LAnkle','Pelv','Thrx','Neck','Head','RWrist','RElbow','RShoulder','LShoulder','LElbow','LWrist']
+                mpii_part_names = ['RAnkle0','RKnee1','RHip2','LHip3','LKnee4','LAnkle5','Pelv6','Thrx7','Neck8','Head9','RWrist10','RElbow11','RShoulder12','LShoulder13','LElbow14','LWrist15']
                 colors = ['m', 'b', 'b', 'r', 'r', 'b', 'b', 'r', 'r', 'm', 'm', 'm', 'r', 'r','b','b']
                 pairs = [[8,9],[11,12],[11,10],[2,1],[1,0],[13,14],[14,15],[3,4],[4,5],[8,7],[7,6],[6,2],[6,3],[8,12],[8,13]]
                 for idx_c, color in enumerate(colors):
@@ -55,7 +55,7 @@ def display_pose(imgdir, visdir, tracked, cmap):
                     plt.plot(np.clip(pose[pairs[idx],0],0,width),np.clip(pose[pairs[idx],1],0,height), 'r-',
                             color=cmap(tracked_id), linewidth=60/alpha_ratio*np.mean(pose[pairs[idx],2]),  alpha=0.6/alpha_ratio*np.mean(pose[pairs[idx],2]))
             elif pose.shape[0] == 17:
-                coco_part_names = ['Nose','LEye','REye','LEar','REar','LShoulder','RShoulder','LElbow','RElbow','LWrist','RWrist','LHip','RHip','LKnee','RKnee','LAnkle','RAnkle']
+                coco_part_names = ['Nose0','LEye1','REye2','LEar3','REar4','LShoulder5','RShoulder6','LElbow7','RElbow8','LWrist9','RWrist10','LHip11','RHip12','LKnee13','RKnee14','LAnkle15','RAnkle16']
                 colors = ['r', 'r', 'r', 'r', 'r', 'y', 'y', 'y', 'y', 'y', 'y', 'g', 'g', 'g','g','g','g']
                 pairs = [[0,1],[0,2],[1,3],[2,4],[5,6],[5,7],[7,9],[6,8],[8,10],[11,12],[11,13],[13,15],[12,14],[14,16],[6,12],[5,11]]
                 for idx_c, color in enumerate(colors):
@@ -158,72 +158,69 @@ if __name__ == '__main__':
     import natsort
     frame_list = natsort.natsorted(frame_list)
     print(frame_list)
+#
+#    print("Start pose tracking...\n")
+#    for idx, frame_name in enumerate(tqdm(frame_list[:-1])):
+#        frame_new_pids = []
+#        frame_id = frame_name.split(".")[0]
+#
+#        next_frame_name = frame_list[idx+1]
+#        next_frame_id = next_frame_name.split(".")[0]
+#        
+#        # init tracking info of the first frame in one video
+#        if idx == 0:
+#            for pid in range(1, track[frame_name]['num_boxes']+1):
+#                    track[frame_name][pid]['new_pid'] = pid
+#                    track[frame_name][pid]['match_score'] = 0
+#
+#        max_pid_id = max(max_pid_id, track[frame_name]['num_boxes'])
+#        cor_file = os.path.join(image_dir, "".join([frame_id, '_', next_frame_id, '_orb.txt']))
+#       
+#        # regenerate the missed pair-matching txt
+#        if not os.path.exists(cor_file) or os.stat(cor_file).st_size<200:
+#            img1_path = os.path.join(image_dir, frame_name)
+#            img2_path = os.path.join(image_dir, next_frame_name)
+#            orb_matching(img1_path,img2_path, image_dir, frame_id, next_frame_id)
+#
+#        all_cors = np.loadtxt(cor_file)
+#
+#        # if there is no people in this frame, then copy the info from former frame
+#        if track[next_frame_name]['num_boxes'] == 0:
+#            track[next_frame_name] = copy.deepcopy(track[frame_name])
+#            continue
+#        cur_all_pids, cur_all_pids_fff = stack_all_pids(track, frame_list[:-1], idx, max_pid_id, link_len)
+#        match_indexes, match_scores = best_matching_hungarian(
+#            all_cors, cur_all_pids, cur_all_pids_fff, track[next_frame_name], weights, weights_fff, num, mag)
+#    
+#        for pid1, pid2 in match_indexes:
+#            if match_scores[pid1][pid2] > match_thres:
+#                track[next_frame_name][pid2+1]['new_pid'] = cur_all_pids[pid1]['new_pid']
+#                max_pid_id = max(max_pid_id, track[next_frame_name][pid2+1]['new_pid'])
+#                track[next_frame_name][pid2+1]['match_score'] = match_scores[pid1][pid2]
+#
+#        # add the untracked new person
+#        for next_pid in range(1, track[next_frame_name]['num_boxes'] + 1):
+#            if 'new_pid' not in track[next_frame_name][next_pid]:
+#                max_pid_id += 1
+#                track[next_frame_name][next_pid]['new_pid'] = max_pid_id
+#                track[next_frame_name][next_pid]['match_score'] = 0
+#
+#    np.save('track-bl.npy',track)
+#    # track = np.load('track-bl.npy').item()
 
-    print("Start pose tracking...\n")
-    for idx, frame_name in enumerate(tqdm(frame_list[:-1])):
-        frame_new_pids = []
-        frame_id = frame_name.split(".")[0]
+#    # export tracking result into notrack json files
+#    print("Export tracking results to json...\n")
+#    for fid, frame_name in enumerate(tqdm(frame_list)):
+#        for pid in range(track[frame_name]['num_boxes']):
+#            notrack[frame_name][pid]['idx'] = track[frame_name][pid+1]['new_pid']
 
-        next_frame_name = frame_list[idx+1]
-        next_frame_id = next_frame_name.split(".")[0]
+#    with open(tracked_json,'w') as json_file:
+#        json_file.write(json.dumps(notrack))
+    
+    with open(tracked_json, 'r') as json_file:
+        notrack = json.load(json_file)
         
-        # init tracking info of the first frame in one video
-        if idx == 0:
-            for pid in range(1, track[frame_name]['num_boxes']+1):
-                    track[frame_name][pid]['new_pid'] = pid
-                    track[frame_name][pid]['match_score'] = 0
-
-        max_pid_id = max(max_pid_id, track[frame_name]['num_boxes'])
-        cor_file = os.path.join(image_dir, "".join([frame_id, '_', next_frame_id, '_orb.txt']))
-       
-        # regenerate the missed pair-matching txt
-        if not os.path.exists(cor_file) or os.stat(cor_file).st_size<200:
-            img1_path = os.path.join(image_dir, frame_name)
-            img2_path = os.path.join(image_dir, next_frame_name)
-            orb_matching(img1_path,img2_path, image_dir, frame_id, next_frame_id)
-
-        all_cors = np.loadtxt(cor_file)
-
-        # if there is no people in this frame, then copy the info from former frame
-        if track[next_frame_name]['num_boxes'] == 0:
-            track[next_frame_name] = copy.deepcopy(track[frame_name])
-            continue
-        cur_all_pids, cur_all_pids_fff = stack_all_pids(track, frame_list[:-1], idx, max_pid_id, link_len)
-        match_indexes, match_scores = best_matching_hungarian(
-            all_cors, cur_all_pids, cur_all_pids_fff, track[next_frame_name], weights, weights_fff, num, mag)
-    
-        for pid1, pid2 in match_indexes:
-            if match_scores[pid1][pid2] > match_thres:
-                track[next_frame_name][pid2+1]['new_pid'] = cur_all_pids[pid1]['new_pid']
-                max_pid_id = max(max_pid_id, track[next_frame_name][pid2+1]['new_pid'])
-                track[next_frame_name][pid2+1]['match_score'] = match_scores[pid1][pid2]
-
-        # add the untracked new person
-        for next_pid in range(1, track[next_frame_name]['num_boxes'] + 1):
-            if 'new_pid' not in track[next_frame_name][next_pid]:
-                max_pid_id += 1
-                track[next_frame_name][next_pid]['new_pid'] = max_pid_id
-                track[next_frame_name][next_pid]['match_score'] = 0
-
-    np.save('track-bl.npy',track)
-    # track = np.load('track-bl.npy').item()
-    
-    # calculate number of people
-    num_persons = 0
-    for fid, frame_name in enumerate(frame_list):
-        for pid in range(1, track[frame_name]['num_boxes']+1):
-            num_persons = max(num_persons, track[frame_name][pid]['new_pid'])
-    print("This video contains %d people."%(num_persons))
-
-    # export tracking result into notrack json files
-    print("Export tracking results to json...\n")
-    for fid, frame_name in enumerate(tqdm(frame_list)):
-        for pid in range(track[frame_name]['num_boxes']):
-            notrack[frame_name][pid]['idx'] = track[frame_name][pid+1]['new_pid']
-
-    with open(tracked_json,'w') as json_file:
-        json_file.write(json.dumps(notrack))
-
+    max_num_persons = 20
     if len(args.visdir)>0:
-        cmap = plt.cm.get_cmap("hsv", num_persons)
+        cmap = plt.cm.get_cmap("hsv", max_num_persons)
         display_pose(image_dir, vis_dir, notrack, cmap)
